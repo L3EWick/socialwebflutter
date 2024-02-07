@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:thewall/components/drawer.dart';
 import 'package:thewall/components/text_field.dart';
+import 'package:thewall/pages/profile_page.dart';
 import 'package:thewall/pages/wall_post.dart';
+import 'package:thewall/components/drawer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,7 +15,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   final currentUser = FirebaseAuth.instance.currentUser!;
 
   final textController = TextEditingController();
@@ -21,9 +23,9 @@ class _HomePageState extends State<HomePage> {
     FirebaseAuth.instance.signOut();
   }
 
-  void postMessage(){
+  void postMessage() {
     // only post if have something in the texfield
-    if (textController.text.isNotEmpty)  {
+    if (textController.text.isNotEmpty) {
       //store in firebase
       FirebaseFirestore.instance.collection("User Posts").add({
         'UserEmail': currentUser.email,
@@ -37,7 +39,14 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       textController.clear();
     });
+  }
 
+  void goToProfilePage(){
+    Navigator.pop(context);
+
+    Navigator.push(context, 
+      MaterialPageRoute(builder: (context) => const ProfilePage()),
+    );
   }
 
   @override
@@ -49,6 +58,7 @@ class _HomePageState extends State<HomePage> {
           "The Wall",
           style: TextStyle(color: Colors.white),
         ),
+        iconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
         backgroundColor: Colors.grey[900],
         actions: [
@@ -60,6 +70,10 @@ class _HomePageState extends State<HomePage> {
               ))
         ],
       ),
+      drawer: MyDrawer(
+        onProfileTap: goToProfilePage,
+        onSignOut: signOut,
+      ),
       body: Center(
         child: Column(
           children: [
@@ -67,35 +81,35 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: StreamBuilder(
                 stream: FirebaseFirestore.instance
-                .collection("User Posts")
-                .orderBy(
-                  "TimeStamp",
-                  descending:false,
-                )
-                .snapshots(),builder: (context, snapshot) {
-                  if(snapshot.hasData){
+                    .collection("User Posts")
+                    .orderBy(
+                      "TimeStamp",
+                      descending: false,
+                    )
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
                     return ListView.builder(
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
                         final post = snapshot.data!.docs[index];
                         return wallPost(
-                          message: post['Message'], 
-                          user: post['UserEmail'], 
+                          message: post['Message'],
+                          user: post['UserEmail'],
                           postId: post.id,
                           likes: List<String>.from(post['Likes'] ?? []),
                         );
                       },
                     );
-                  }else if (snapshot.hasError) {
+                  } else if (snapshot.hasError) {
                     return Center(
                       child: Text('Error:%{snapshot.error}'),
                     );
                   }
                   return const Center(
                     child: CircularProgressIndicator(),
-                    );
+                  );
                 },
-             
               ),
             ),
             //post message
@@ -110,20 +124,20 @@ class _HomePageState extends State<HomePage> {
                       obscureText: false,
                     ),
                   ),
-              
+
                   // post button
-              
+
                   IconButton(
-                    onPressed: postMessage, 
-                  icon: const Icon(Icons.arrow_circle_up),
-                  
+                    onPressed: postMessage,
+                    icon: const Icon(Icons.arrow_circle_up),
                   )
                 ],
               ),
             ),
-        
+
             //logged in as
-            Text("Logged in as: " + currentUser.email!,
+            Text(
+              "Logged in as: " + currentUser.email!,
               style: TextStyle(color: Colors.grey),
             ),
 
