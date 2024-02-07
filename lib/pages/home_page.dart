@@ -5,7 +5,6 @@ import 'package:thewall/components/drawer.dart';
 import 'package:thewall/components/text_field.dart';
 import 'package:thewall/pages/profile_page.dart';
 import 'package:thewall/pages/wall_post.dart';
-import 'package:thewall/components/drawer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -54,7 +53,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           "The Wall",
           style: TextStyle(color: Colors.white),
         ),
