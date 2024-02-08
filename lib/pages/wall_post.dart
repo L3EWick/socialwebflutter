@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:thewall/components/comment.dart';
 import 'package:thewall/components/comment_button.dart';
 import 'package:thewall/components/like_button.dart';
+import 'package:thewall/helper/helper_methods.dart';
 
 class wallPost extends StatefulWidget {
   final String message;
@@ -81,20 +83,25 @@ class _wallPostState extends State<wallPost> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              
+
               _commentTextController.clear();
-              },
+            },
             child: Text("Cancel"),
           ),
 
           TextButton(
-            onPressed: () => addComment(_commentTextController.text),
+            onPressed: () {
+              addComment(_commentTextController.text);
+
+              Navigator.pop(context);
+               
+              _commentTextController.clear();
+
+            },
             child: Text("Post"),
           ),
 
           //cancel button
-
-
         ],
       ),
     );
@@ -110,16 +117,28 @@ class _wallPostState extends State<wallPost> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          //wallpost
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.user, style: TextStyle(color: Colors.grey[500])),
-              const SizedBox(height: 10),
-              Text(widget.message)
+
+              Text(widget.message),
+              
+              const SizedBox(
+                height: 5
+              ),
+
+              Text(
+                widget.user, 
+                  style: TextStyle(
+                  color: Colors.grey[500]
+                )
+              ),
+              
             ],
           ),
           const SizedBox(
-            width: 20,
+            height: 20,
           ),
 
           //buttons
@@ -135,7 +154,7 @@ class _wallPostState extends State<wallPost> {
                     isLiked: isLiked,
                     onTap: toggleLike,
                   ),
-                   const SizedBox(
+                  const SizedBox(
                     height: 5,
                   ),
                   //like count
@@ -143,9 +162,9 @@ class _wallPostState extends State<wallPost> {
                   Text(widget.likes.length.toString())
                 ],
               ),
-
-              const SizedBox(width: 10,),
-
+              const SizedBox(
+                width: 10,
+              ),
               Column(
                 children: [
                   CommentButon(onTap: showCommentDialog),
@@ -155,6 +174,41 @@ class _wallPostState extends State<wallPost> {
                   Text(
                     '0',
                     style: TextStyle(color: Colors.grey),
+                  ),
+
+                  // comments under the posts
+                  Container(
+                    height: 200,
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                      .collection("User Posts")
+                      .orderBy("CommentTime", descending: true)
+                      .snapshots(),
+                      builder: (context, snapshot){
+                        
+                        // show loading circle if no data yet
+                        if(!snapshot.hasData){
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                         return ListView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: snapshot.data!.docs.map((doc) {
+                            final commentData = doc.data() as Map<String, dynamic>;
+                    
+                            return Comment(
+                              text: commentData["CommentText"], 
+                              user: commentData["CommentedBy"], 
+                              time: formatDate(commentData["CommentTime"]),
+                              );
+                          }).toList(),
+                         );
+                    
+                    
+                      } 
+                    ),
                   ),
                 ],
               ),
