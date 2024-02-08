@@ -54,6 +54,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ));
 
+            
+          // update in firebase
           if (newValue.trim().length > 0) {
             await usersCollection.doc(currentUser.email).update({field: newValue});
           }
