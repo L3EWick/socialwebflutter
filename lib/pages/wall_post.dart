@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,13 +12,17 @@ class wallPost extends StatefulWidget {
   final String message;
   final String user;
   final String postId;
+  final String time;
   final List<String> likes;
   const wallPost(
       {super.key,
       required this.message,
       required this.user,
       required this.postId,
-      required this.likes});
+      required this.likes,
+      required this.time
+
+      });
 
   @override
   State<wallPost> createState() => _wallPostState();
@@ -94,9 +100,8 @@ class _wallPostState extends State<wallPost> {
               addComment(_commentTextController.text);
 
               Navigator.pop(context);
-               
-              _commentTextController.clear();
 
+              _commentTextController.clear();
             },
             child: Text("Post"),
           ),
@@ -111,7 +116,9 @@ class _wallPostState extends State<wallPost> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(8)),
+          color:  Theme.of(context).colorScheme.primary,
+           borderRadius: BorderRadius.circular(8)
+        ),
       margin: EdgeInsets.only(top: 25, left: 25, right: 25),
       padding: EdgeInsets.all(25),
       child: Column(
@@ -121,20 +128,32 @@ class _wallPostState extends State<wallPost> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               Text(widget.message),
-              
-              const SizedBox(
-                height: 5
-              ),
+              const SizedBox(height: 5),
 
+              // user
+              Row(
+            children: [
               Text(
-                widget.user, 
-                  style: TextStyle(
-                  color: Colors.grey[500]
-                )
+                widget.user,
+                style: TextStyle( 
+                  color: Colors.grey[400]
+                ),
+                ),
+              Text(
+                " . ",
+               style: TextStyle( 
+                  color: Colors.grey[400]
+                ),
               ),
-              
+              Text(
+                widget.time,
+                 style: TextStyle( 
+                  color: Colors.grey[400]
+                ),
+              )
+          ],
+         ),
             ],
           ),
           const SizedBox(
@@ -147,8 +166,6 @@ class _wallPostState extends State<wallPost> {
             children: [
               Column(
                 children: [
-                  // comment button
-
                   //like button
                   LikeButton(
                     isLiked: isLiked,
@@ -165,6 +182,8 @@ class _wallPostState extends State<wallPost> {
               const SizedBox(
                 width: 10,
               ),
+
+              //comment button
               Column(
                 children: [
                   CommentButon(onTap: showCommentDialog),
@@ -175,44 +194,45 @@ class _wallPostState extends State<wallPost> {
                     '0',
                     style: TextStyle(color: Colors.grey),
                   ),
-
-                  // comments under the posts
-                  Container(
-                    height: 200,
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                      .collection("User Posts")
-                      .orderBy("CommentTime", descending: true)
-                      .snapshots(),
-                      builder: (context, snapshot){
-                        
-                        // show loading circle if no data yet
-                        if(!snapshot.hasData){
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                         return ListView(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: snapshot.data!.docs.map((doc) {
-                            final commentData = doc.data() as Map<String, dynamic>;
-                    
-                            return Comment(
-                              text: commentData["CommentText"], 
-                              user: commentData["CommentedBy"], 
-                              time: formatDate(commentData["CommentTime"]),
-                              );
-                          }).toList(),
-                         );
-                    
-                    
-                      } 
-                    ),
-                  ),
                 ],
               ),
             ],
+          ),
+
+          const SizedBox(height: 30),
+
+          // comment display
+
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection("User Posts")
+                .doc(widget.postId)
+                .collection("Comments")
+                .orderBy("CommentTime", descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              
+              return ListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: snapshot.data!.docs.map((doc) {
+                  // Get the comment data
+                  final commentData = doc.data() as Map<String, dynamic>;
+
+                  // Return the comment
+                  return Comment(
+                    text: commentData["CommentText"],
+                    user: commentData["CommentBy"],
+                    time: formatDate(commentData["CommentTime"]),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),

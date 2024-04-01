@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:thewall/components/drawer.dart';
 import 'package:thewall/components/text_field.dart';
+import 'package:thewall/helper/helper_methods.dart';
 import 'package:thewall/pages/profile_page.dart';
 import 'package:thewall/pages/wall_post.dart';
 
@@ -51,21 +52,18 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text(
           "The Wall",
-          style: TextStyle(color: Colors.white),
         ),
-        iconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
-        backgroundColor: Colors.grey[900],
         actions: [
           IconButton(
               onPressed: signOut,
               icon: Icon(
                 Icons.logout,
-                color: Colors.white,
+             
               ))
         ],
       ),
@@ -97,6 +95,7 @@ class _HomePageState extends State<HomePage> {
                           user: post['UserEmail'],
                           postId: post.id,
                           likes: List<String>.from(post['Likes'] ?? []),
+                          time: formatDate(post['TimeStamp']),
                         );
                       },
                     );
